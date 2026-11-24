@@ -228,9 +228,27 @@ npm ci
 Crie `.env.local` na raiz do projeto, usando `.env.example` como referência:
 
 ```env
+
+# MONGODB ATLAS
+# Substitua pelos dados reais apenas no .env.local
 MONGODB_URI="mongodb+srv://<usuario>:<senha>@<cluster>.mongodb.net/<nome_do_banco>"
+
+# NEXTAUTH
+# Configuração local
 NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="<segredo-gerado>"
+
+# Gere uma chave aleatória segura para sessões JWT
+NEXTAUTH_SECRET="substitua-por-uma-chave-aleatoria-segura"
+
+# UPSTASH REDIS
+# Obtenha as credenciais no painel do Upstash
+UPSTASH_REDIS_REST_URL="https://seu-banco-redis.upstash.io"
+UPSTASH_REDIS_REST_TOKEN="seu-token-rest-do-upstash"
+
+# RATE LIMITING
+# Segredo exclusivo para gerar hashes HMAC dos identificadores
+# Gere uma chave aleatória diferente do NEXTAUTH_SECRET
+RATE_LIMIT_HASH_SECRET="substitua-por-outro-segredo-aleatorio"
 ```
 
 Gere um segredo para o NextAuth com:
