@@ -40,11 +40,6 @@ export default async function DashboardPage() {
                 o gerenciamento individual de tarefas nas próximas etapas.
               </p>
             </div>
-            <p>
-              Esta versão de estabilização mantém o escopo funcional limitado
-              ao cadastro, login, sessão e acesso protegido. O CRUD de tarefas
-              ainda não foi implementado.
-            </p>
           </CardContent>
         </Card>
       </div>
