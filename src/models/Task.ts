@@ -1,11 +1,6 @@
 
 import mongoose, { Schema, models, model, Types } from "mongoose";
-
-// Define os valores permitidos para o status da tarefa.
-export type TaskStatus = "pendente" | "completa";
-
-// Define os níveis permitidos de prioridade.
-export type TaskPriority = "baixa" | "média" | "alta";
+import type { TaskPriority, TaskStatus } from "@/types/task";
 
 // Define a estrutura de uma tarefa no MongoDB.
 export interface TaskDocument extends mongoose.Document {

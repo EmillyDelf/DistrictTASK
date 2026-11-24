@@ -7,76 +7,19 @@ import { getServerSession } from "next-auth/next";
 
 import { authOptions } from "@/lib/auth";
 import dbConnect from "@/lib/db";
-import Task, {
-  type TaskPriority,
-  type TaskStatus,
-} from "@/models/Task";
+import Task from "@/models/Task";
 
-// TIPOS E ESTRUTURAS
-
-export interface CreateTaskInput {
-  title: string;
-  description?: string;
-  status?: TaskStatus;
-  priority?: TaskPriority;
-  dueDate?: string | null;
-}
-
-export interface UpdateTaskInput {
-  taskId: string;
-  title?: string;
-  description?: string;
-  status?: TaskStatus;
-  priority?: TaskPriority;
-  dueDate?: string | null;
-}
-
-interface SerializedTask {
-  id: string;
-  title: string;
-  description?: string;
-  status: TaskStatus;
-  priority: TaskPriority;
-  dueDate: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
-
-type CreateTaskResult =
-  | {
-      success: true;
-      task: SerializedTask;
-    }
-  | {
-      error: string;
-    };
-
-type GetTasksResult =
-  | {
-      success: true;
-      tasks: SerializedTask[];
-    }
-  | {
-      error: string;
-    };
-
-type UpdateTaskResult =
-  | {
-      success: true;
-      task: SerializedTask;
-    }
-  | {
-      error: string;
-    };
-
-type DeleteTaskResult =
-  | {
-      success: true;
-      message: string;
-    }
-  | {
-      error: string;
-    };
+import type {
+  CreateTaskInput,
+  CreateTaskResult,
+  DeleteTaskResult,
+  GetTasksResult,
+  SerializedTask,
+  TaskPriority,
+  TaskStatus,
+  UpdateTaskInput,
+  UpdateTaskResult,
+} from "@/types/task";
 
 // FUNÇÕES AUXILIARES
 
