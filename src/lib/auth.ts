@@ -1,3 +1,4 @@
+
 import type { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import bcrypt from "bcryptjs";
@@ -19,10 +20,15 @@ export const authOptions: NextAuthOptions = {
         if (!email || !password) return null;
 
         await dbConnect();
+
         const user = await User.findOne({ email }).select("+password");
         if (!user) return null;
 
-        const passwordIsValid = await bcrypt.compare(password, user.password);
+        const passwordIsValid = await bcrypt.compare(
+          password,
+          user.password
+        );
+
         if (!passwordIsValid) return null;
 
         return {
@@ -33,14 +39,23 @@ export const authOptions: NextAuthOptions = {
       },
     }),
   ],
-  pages: { signIn: "/login" },
-  session: { strategy: "jwt" },
+
+  pages: {
+    signIn: "/login",
+  },
+
+  session: {
+    strategy: "jwt",
+  },
+
   secret: process.env.NEXTAUTH_SECRET,
+
   callbacks: {
     async session({ session, token }) {
       if (session.user && token.sub) {
         session.user.id = token.sub;
       }
+
       return session;
     },
   },
