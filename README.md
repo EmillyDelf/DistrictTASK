@@ -128,13 +128,13 @@ O Docker não é obrigatório na configuração atual, pois o projeto utiliza Mo
 ### 1. Clonar o repositório
 
 ```bash
-git clone URL_DO_REPOSITORIO
+git clone https://github.com/EmillyDelf/DistrictTASK
 ```
 
 Acesse a pasta do projeto:
 
 ```bash
-cd district-task
+cd DistrictTASK
 ```
 
 ### 2. Instalar as dependências
