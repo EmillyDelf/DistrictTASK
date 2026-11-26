@@ -34,9 +34,24 @@ const validPriorities: TaskPriority[] = [
   "alta",
 ];
 
-function isValidDate(value: string): boolean {
-  const date = new Date(value);
-  return !Number.isNaN(date.getTime());
+function parseDueDate(value: unknown): Date | null {
+  if (typeof value !== "string") return null;
+
+  const parts = /^(\d{4}|[+-]\d{6})-(\d{2})-(\d{2})(T(?:[01]\d|2[0-3]):\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:?\d{2})?)?$/.exec(value);
+  if (!parts || parts[0] !== value) return null;
+
+  const [, year, month, day, time] = parts;
+  const calendar = new Date(`${year}-${month}-${day}T00:00:00Z`);
+
+  // Date can normalize an invalid calendar day instead of rejecting it.
+  if (
+    calendar.getUTCFullYear() !== Number(year) ||
+    calendar.getUTCMonth() + 1 !== Number(month) ||
+    calendar.getUTCDate() !== Number(day)
+  ) return null;
+
+  const date = time ? new Date(value) : calendar;
+  return Number.isNaN(date.getTime()) ? null : date;
 }
 
 function serializeTask(task: {
@@ -125,16 +140,14 @@ export async function createTask(
   let dueDate: Date | undefined;
 
   if (input.dueDate !== undefined && input.dueDate !== null && input.dueDate !== "") {
-    if (
-      typeof input.dueDate !== "string" ||
-      !isValidDate(input.dueDate)
-    ) {
+    const parsed = parseDueDate(input.dueDate);
+    if (!parsed) {
       return {
         error: "Data de vencimento inválida.",
       };
     }
 
-    dueDate = new Date(input.dueDate);
+    dueDate = parsed;
   }
 
   try {
@@ -307,16 +320,14 @@ export async function updateTask(
       // Permite remover a data de vencimento.
       unsetFields.dueDate = 1;
     } else {
-      if (
-        typeof input.dueDate !== "string" ||
-        !isValidDate(input.dueDate)
-      ) {
+      const parsed = parseDueDate(input.dueDate);
+      if (!parsed) {
         return {
           error: "Data de vencimento inválida.",
         };
       }
 
-      updates.dueDate = new Date(input.dueDate);
+      updates.dueDate = parsed;
     }
   }
 
