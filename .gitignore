@@ -37,6 +37,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# local design references
+/stitch_district_task_dashboard_design/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

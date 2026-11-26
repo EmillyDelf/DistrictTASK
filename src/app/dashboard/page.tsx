@@ -1,48 +1,31 @@
-import { getServerSession } from "next-auth";
-import { redirect } from "next/navigation";
-import { authOptions } from "@/lib/auth";
-import SignOutButton from "@/components/SignOutButton";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { CheckCircle2, ListTodo } from "lucide-react";
+import { getTasks } from "@/app/actions/task-actions";
+import { StatePanel } from "@/components/feedback/state-panel";
+import { DashboardHeading } from "@/components/tasks/dashboard-heading";
+import { TaskDashboard } from "@/components/tasks/task-dashboard";
+import { TaskDialogs } from "@/components/tasks/task-dialogs";
+import { TaskRetryButton } from "@/components/tasks/task-retry-button";
+import { TaskSummary } from "@/components/tasks/task-summary";
+import { requireDashboardUser } from "@/lib/dashboard-session";
 
 export default async function DashboardPage() {
-  const session = await getServerSession(authOptions);
-
-  if (!session?.user) redirect("/login");
+  const { name } = await requireDashboardUser();
+  const result = await getTasks();
+  const tasks = "success" in result ? result.tasks : undefined;
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-gray-50 p-6">
-      <div className="w-full max-w-3xl space-y-6">
-        <header className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.2em] text-red-800">
-              District Task
-            </p>
-            <h1 className="mt-2 text-3xl font-bold text-gray-950">
-              Olá, {session.user.name ?? "usuário"}.
-            </h1>
-          </div>
-          <SignOutButton />
-        </header>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ListTodo className="h-5 w-5 text-red-800" />
-              Seu espaço de tarefas
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3 text-sm text-gray-600">
-            <div className="flex items-start gap-3 rounded-lg bg-gray-50 p-4">
-              <CheckCircle2 className="mt-0.5 h-5 w-5 shrink-0 text-red-800" />
-              <p>
-                Sua conta está autenticada. A base está preparada para receber
-                o gerenciamento individual de tarefas nas próximas etapas.
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+    <main className="content-container flex min-w-0 flex-col gap-5 py-6 pb-24 sm:gap-6 sm:py-8 sm:pb-24">
+      <DashboardHeading name={name} canCreate={!!tasks} />
+      <TaskSummary tasks={tasks} />
+      {tasks ? <TaskDashboard tasks={tasks} /> : (
+        <StatePanel
+          variant="error"
+          heading="h2"
+          title="Não foi possível carregar suas tarefas"
+          description="Tente buscar a lista novamente para conferir o estado das suas tarefas."
+          action={<TaskRetryButton />}
+        />
+      )}
+      <TaskDialogs tasks={tasks ?? []} />
     </main>
   );
 }
