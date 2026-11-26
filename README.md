@@ -1,311 +1,114 @@
 # District Task
 
-Sistema web de gerenciamento individual de tarefas, desenvolvido com Next.js, TypeScript e MongoDB. A aplicação permite que múltiplos usuários mantenham suas próprias tarefas em espaços isolados, sem compartilhamento, equipes ou atribuição de atividades a terceiros.
+Gerenciador individual de tarefas desenvolvido como projeto acadêmico de Desenvolvimento Web II. Cada conta organiza as próprias atividades em um painel privado. A página inicial apresenta uma demonstração com dados fictícios.
 
-## Sumário
+## Funcionalidades
 
-- [Tecnologias](#tecnologias)
-- [Arquitetura](#arquitetura)
-- [Funcionalidades e estado de implementação](#funcionalidades-e-estado-de-implementação)
-- [Domínio e regras de negócio](#domínio-e-regras-de-negócio)
-- [Segurança e isolamento de dados](#segurança-e-isolamento-de-dados)
-- [Estrutura do projeto](#estrutura-do-projeto)
-- [Contratos e documentação técnica](#contratos-e-documentação-técnica)
-- [Identidade visual](#identidade-visual)
-- [Requisitos](#requisitos)
-- [Instalação e configuração](#instalação-e-configuração)
-- [Comandos disponíveis](#comandos-disponíveis)
-- [Validação e testes](#validação-e-testes)
-- [Escopo e próximos passos](#escopo-e-próximos-passos)
-- [Desenvolvimento](#desenvolvimento)
+- Cadastro, login e logout com e-mail e senha.
+- Criação, listagem, edição, conclusão, reabertura e exclusão de tarefas.
+- Pesquisa por título, filtros de status e prioridade, ordenação e indicadores.
+- Tarefas com título, descrição opcional, prioridade, status e prazo opcional.
+- Temas claro e escuro, lista responsiva e formulários adaptados ao mobile.
+- Estados de carregamento, lista vazia, busca sem resultados e erro com nova tentativa.
 
-## Tecnologias
+## Tecnologias e arquitetura
 
-### Aplicação e interface
+- **Interface** — Next.js 16.4.6 com App Router, React 19.2, TypeScript, Tailwind CSS 4, ShadCN/UI, Radix UI, Lucide, next-themes e Sonner.
+- **Estado** — Zustand mantém busca, filtros, ordenação, diálogos e operações pendentes por sessão. A lista e os indicadores são derivados da leitura do servidor.
+- **Servidor** — Server Actions executam o cadastro e o CRUD. O Route Handler catch-all do NextAuth 4.24.13 serve o fluxo de credenciais e as sessões JWT.
+- **Dados** — MongoDB Atlas com Mongoose e conexão singleton. Upstash Redis limita tentativas de login. bcrypt protege as senhas persistidas.
+- **Revalidação** — Escritas confirmadas chamam `revalidatePath("/dashboard")`. Quando a confirmação de uma criação fica incerta, a interface preserva o rascunho e orienta a conferir a lista antes de reenviar.
 
-| Tecnologia | Uso |
-|---|---|
-| [Next.js 16](https://nextjs.org/) | Framework React, App Router, páginas e execução no servidor. |
-| [React 19](https://react.dev/) | Construção das interfaces. |
-| [TypeScript](https://www.typescriptlang.org/) | Tipagem estática. |
-| [Tailwind CSS 4](https://tailwindcss.com/) | Estilização utilitária. |
-| [Lucide React](https://lucide.dev/) | Ícones. |
-| [Radix UI Slot](https://www.radix-ui.com/primitives) | Primitivo `Slot` utilizado na composição de componentes. |
-
-### Backend, autenticação e persistência
-
-| Tecnologia | Uso |
-|---|---|
-| [Next.js Server Actions](https://nextjs.org/docs/app/building-your-application/data-fetching/server-actions-and-mutations) | Operações de cadastro e gerenciamento executadas no servidor. |
-| [Next.js Route Handlers](https://nextjs.org/docs/app/building-your-application/routing/route-handlers) | Endpoint de autenticação do NextAuth. |
-| [MongoDB Atlas](https://www.mongodb.com/atlas) | Banco de dados NoSQL hospedado. |
-| [Mongoose](https://mongoosejs.com/) | Schemas, models e comunicação com MongoDB. |
-| [NextAuth.js 4](https://next-auth.js.org/) | Autenticação por credenciais e sessões JWT. |
-| [bcryptjs](https://www.npmjs.com/package/bcryptjs) | Hash e comparação de senhas. |
-
-### Ferramentas de desenvolvimento
-
-- ESLint 9 — análise estática.
-- TypeScript Compiler — verificação de tipos.
-- npm — gerenciamento de dependências e scripts.
-
-As versões efetivamente declaradas estão em `package.json` e `package-lock.json`.
-
-## Arquitetura
-
-O District Task utiliza uma arquitetura fullstack dentro de uma única aplicação Next.js. O App Router organiza as páginas e rotas; as Server Actions concentram operações de escrita e leitura executadas no servidor; Mongoose faz a persistência no MongoDB Atlas.
-
-O projeto não possui uma API REST independente para o gerenciamento de tarefas. As operações desse módulo são expostas por Server Actions. O Route Handler existente é destinado à integração do NextAuth.
-
-## Funcionalidades e estado de implementação
-
-### Cadastro de usuários — implementado
-
-O fluxo de cadastro está em `src/app/actions.ts` e contempla:
-
-- recebimento de nome, e-mail e senha por `FormData`;
-- validação dos tipos e dos campos;
-- remoção de espaços externos do nome e do e-mail;
-- normalização do e-mail para minúsculas;
-- validação do formato e do tamanho do e-mail;
-- limite de 80 caracteres para o nome;
-- senha com no mínimo 8 caracteres e limite de 72 bytes para compatibilidade com bcrypt;
-- geração de hash com bcrypt antes da persistência;
-- verificação de e-mail existente;
-- tratamento de duplicidade de chave no MongoDB.
-
-O schema de usuário também define e-mail único e senha não selecionada por padrão nas consultas.
-
-### Autenticação — implementada
-
-- Login com e-mail e senha por NextAuth Credentials Provider.
-- Normalização do e-mail durante a autenticação.
-- Comparação da senha informada com o hash persistido.
-- Estratégia de sessão JWT.
-- Identificador do usuário disponível na sessão tipada.
-- Logout por meio de `signOut`.
-- Página de login personalizada em `/login`.
-
-### Proteção de acesso — implementada parcialmente por página e por operação
-
-- O dashboard consulta a sessão no servidor e redireciona usuários não autenticados para `/login`.
-- A página inicial redireciona usuários autenticados para `/dashboard`.
-- Cada Server Action de tarefas verifica a sessão antes de executar a operação.
-- As operações de tarefas aplicam o identificador do usuário autenticado nas consultas.
-
-**Limite da implementação atual:** não há middleware de proteção global no projeto. A proteção observada está nas páginas e nas próprias operações de servidor. A documentação não deve apresentar isso como uma camada global de middleware.
-
-## Domínio e regras de negócio
-
-O produto foi definido como um gerenciador individual e multiusuário:
-
-- cada conta possui seu próprio conjunto de tarefas;
-- não há compartilhamento, equipes ou atribuição de tarefas a outras pessoas;
-- o proprietário é determinado pela sessão autenticada;
-- o cliente não escolhe nem envia o proprietário da tarefa;
-- as consultas de tarefas são limitadas ao usuário autenticado.
-
-## Segurança e isolamento de dados
-
-As medidas identificadas no código incluem:
-
-- hash de senhas com bcrypt;
-- senha excluída das consultas Mongoose por padrão;
-- autenticação por credenciais;
-- sessão JWT;
-- validação de sessão em cada operação de tarefa;
-- identificação do proprietário no servidor;
-- filtros por usuário nas consultas de listagem, atualização e exclusão;
-- validação de identificadores antes das operações de atualização e exclusão;
-- variáveis de ambiente para URI do banco e segredo do NextAuth.
-
-O frontend não deve ser tratado como mecanismo de autorização. As verificações relevantes precisam permanecer no servidor.
-
-## Estrutura do projeto
-
-Estrutura observada no ZIP analisado:
+### Estrutura do projeto
 
 ```text
-nextjs-fullstack-main/
-├── docs/
-│   ├── Contrato_das_server_actions.md
-│   └── Contrato_de_intengracao.md
-├── src/
-│   ├── app/
-│   │   ├── actions/
-│   │   │   └── task-actions.ts
-│   │   ├── api/
-│   │   │   └── auth/
-│   │   │       └── [...nextauth]/
-│   │   │           └── route.ts
-│   │   ├── dashboard/
-│   │   │   └── page.tsx
-│   │   ├── login/
-│   │   │   └── page.tsx
-│   │   ├── register/
-│   │   │   └── page.tsx
-│   │   ├── actions.ts
-│   │   ├── globals.css
-│   │   ├── layout.tsx
-│   │   ├── loading.tsx
-│   │   └── page.tsx
-│   ├── components/
-│   │   ├── SignOutButton.tsx
-│   │   └── ui/
-│   │       ├── alert.tsx
-│   │       ├── button.tsx
-│   │       ├── card.tsx
-│   │       └── input.tsx
-│   ├── lib/
-│   │   ├── auth.ts
-│   │   ├── db.ts
-│   │   └── utils.ts
-│   ├── models/
-│   │   ├── Task.ts
-│   │   └── User.ts
-│   ├── types/
-│   │   └── task.ts
-│   └── types-next-auth.d.ts
-├── .env.example
-├── .gitignore
-├── components.json
-├── eslint.config.mjs
-├── next.config.ts
-├── package.json
-├── package-lock.json
-├── postcss.config.mjs
-├── tsconfig.json
-└── README.md
+public/brand/        Logos oficiais
+src/app/(public)/    Página inicial, login, cadastro e layout público
+src/app/dashboard/   Área privada, layout, loading e error
+src/app/actions/     Server Actions de tarefas
+src/app/actions.ts   Cadastro
+src/app/api/auth/    Route Handler do NextAuth
+src/components/      Interface, temas, feedback e componentes ShadCN/UI
+src/lib/             Conexão, autenticação, rate limiting e utilitários
+src/models/          Modelos Mongoose de usuário e tarefa
+src/store/           Estado do dashboard com Zustand
+src/types/           Contratos TypeScript das tarefas
+docs/                Contratos de integração e Server Actions
 ```
 
-## Contratos e documentação técnica
-
-O projeto contém dois documentos complementares:
-
-- **`docs/Contrato_das_server_actions.md`:** descreve as quatro operações, parâmetros, retornos, tipos compartilhados, exemplos de uso e regras de segurança.
-- **`docs/Contrato_de_intengracao.md`:** estabelece responsabilidades do backend e frontend, padronização de dados, tratamento de estados e critérios para considerar a integração concluída.
-
-Esses documentos são especificações de integração. A presença deles não significa que todos os critérios descritos já tenham sido validados em conjunto.
+As assinaturas, os retornos e as responsabilidades de integração estão documentados nos [contratos de Server Actions](docs/Contrato_das_server_actions.md) e [de integração](docs/Contrato_de_intengracao.md).
 
 ## Identidade visual
 
-A identidade visual definida para o District Task utiliza uma proposta minimalista e profissional, com a seguinte paleta:
+A identidade combina preto `#080808`, prata `#CDCBCA`, vermelho `#D41514` e branco `#FFFFFF` com tipografia Geist. Os temas usam tokens semânticos e os indicadores usam rótulos além da cor. Os logos estão em `public/brand/` e são servidos por `next/image`.
 
-| Cor | Código hexadecimal |
-|---|---|
-| Preto | `#080808` |
-| Prata | `#CDCBCA` |
-| Vermelho | `#D41514` |
+## Instalação local
 
-**Estado de implementação:** a paleta está documentada como identidade definida, mas não está integralmente aplicada ao frontend desta versão. O CSS global utiliza tokens neutros em OKLCH, enquanto as páginas ainda apresentam classes de cores distintas. A aplicação consistente da paleta deve ocorrer na etapa de consolidação visual.
+Use Node.js 20.19 ou superior, npm, um banco MongoDB e uma instância Upstash Redis de desenvolvimento. A homologação usou Node.js 24. A primeira compilação pode precisar de acesso às fontes do Google via `next/font`.
 
-## Requisitos
-
-- Node.js 20.9 ou superior.
-- npm.
-- MongoDB Atlas ou outra instância MongoDB compatível.
-- Variáveis de ambiente configuradas.
-
-Docker não é requisito da configuração atual. MongoDB Compass pode ser utilizado opcionalmente para inspecionar os registros.
-
-## Instalação e configuração
-
-### 1. Clonar o repositório
-
-```bash
+```powershell
 git clone https://github.com/EmillyDelf/DistrictTASK.git
 cd DistrictTASK
+npm.cmd ci
+Copy-Item .env.example .env.local
 ```
 
-### 2. Instalar dependências
+Em uma instalação já configurada, mantenha o arquivo `.env.local` existente. Nas sessões de desenvolvimento, use serviços separados dos de produção.
 
-```bash
-npm ci
-```
-
-### 3. Configurar variáveis de ambiente
-
-Crie `.env.local` na raiz do projeto, usando `.env.example` como referência:
-
-```env
-
-# MONGODB ATLAS
-# Substitua pelos dados reais apenas no .env.local
-MONGODB_URI="mongodb+srv://<usuario>:<senha>@<cluster>.mongodb.net/<nome_do_banco>"
-
-# NEXTAUTH
-# Configuração local
-NEXTAUTH_URL="http://localhost:3000"
-
-# Gere uma chave aleatória segura para sessões JWT
-NEXTAUTH_SECRET="substitua-por-uma-chave-aleatoria-segura"
-
-# UPSTASH REDIS
-# Obtenha as credenciais no painel do Upstash
-UPSTASH_REDIS_REST_URL="https://seu-banco-redis.upstash.io"
-UPSTASH_REDIS_REST_TOKEN="seu-token-rest-do-upstash"
-
-# RATE LIMITING
-# Segredo exclusivo para gerar hashes HMAC dos identificadores
-# Gere uma chave aleatória diferente do NEXTAUTH_SECRET
-RATE_LIMIT_HASH_SECRET="substitua-por-outro-segredo-aleatorio"
-```
-
-Gere um segredo para o NextAuth com:
-
-```bash
-openssl rand -base64 32
-```
-
-Insira o resultado em `NEXTAUTH_SECRET`.
-
-Substitua os valores de exemplo da URI pelos dados do seu cluster MongoDB Atlas. Nunca utilize credenciais reais no `.env.example`, no README ou em arquivos enviados ao Git.
-
-### 4. Executar em desenvolvimento
-
-```bash
-npm run dev
-```
-
-A aplicação ficará disponível em:
-
-```text
-http://localhost:3000
-```
-
-## Comandos disponíveis
-
-| Comando | Descrição |
+| Variável | Origem e finalidade |
 |---|---|
-| `npm run dev` | Inicia o servidor de desenvolvimento. |
-| `npm run lint` | Executa o ESLint. |
-| `npx tsc --noEmit` | Verifica os tipos TypeScript sem gerar arquivos. |
-| `npm run build` | Gera a compilação de produção. |
-| `npm run start` | Inicia a aplicação compilada. |
+| `MONGODB_URI` | URI do MongoDB Atlas com usuário de banco autorizado e o nome do banco no caminho. Codifique os caracteres reservados da senha na URI. |
+| `NEXTAUTH_URL` | `http://localhost:3000` no ambiente local. Na Vercel, use a URL HTTPS do ambiente correspondente. |
+| `NEXTAUTH_SECRET` | Segredo aleatório para sessões JWT. |
+| `UPSTASH_REDIS_REST_URL` | URL REST fornecida pelo Upstash para o Redis do ambiente. |
+| `UPSTASH_REDIS_REST_TOKEN` | Token REST fornecido pelo Upstash, com permissão para as operações do limitador. |
+| `RATE_LIMIT_HASH_SECRET` | Segredo aleatório independente, usado para derivar identificadores de rate limiting por HMAC. |
 
-Não há script de testes automatizados declarado em `package.json` nesta versão.
+Execute o comando abaixo duas vezes para gerar valores diferentes para os dois segredos. Guarde os valores apenas na configuração privada do ambiente.
 
-## Validação e testes
+```powershell
+node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'))"
+```
 
-Os comandos de lint, verificação de tipos e build estão disponíveis para validação local. O ZIP analisado não contém relatório de execução que permita afirmar que todos foram executados com sucesso nesta revisão.
+Inicie o servidor em loopback e acesse [localhost:3000](http://localhost:3000).
 
-A validação funcional do módulo de tarefas deve contemplar:
+```powershell
+npm.cmd run dev -- --hostname 127.0.0.1 --port 3000 --webpack
+```
 
-- [ ] Cadastro com dados válidos.
-- [ ] Rejeição de e-mail duplicado.
-- [ ] Login e logout.
-- [ ] Redirecionamento de visitante ao acessar o dashboard.
-- [ ] Criação de tarefa com campos obrigatórios e opcionais.
-- [ ] Listagem sem tarefas e com tarefas.
-- [ ] Atualização de título, descrição, status, prioridade e vencimento.
-- [ ] Remoção da data de vencimento.
-- [ ] Exclusão de tarefa.
-- [ ] Bloqueio de operações sem sessão.
-- [ ] Impossibilidade de consultar, alterar ou excluir tarefa pertencente a outra conta.
-- [ ] Integração da interface com os estados de carregamento, sucesso e erro.
+Em macOS ou Linux, use `npm` e `npx` no lugar de `npm.cmd` e `npx.cmd`.
 
-## Desenvolvimento
+## Comandos de verificação e build
 
-Projeto acadêmico desenvolvido para fins de estudo e aprendizado em desenvolvimento web fullstack, com foco em Next.js, TypeScript, autenticação, modelagem de dados e persistência com MongoDB.
+| Comando | Uso |
+|---|---|
+| `npm.cmd run lint` | Verificação ESLint. |
+| `npx.cmd tsc --noEmit` | Verificação TypeScript. Execute após a geração dos tipos do Next.js pelo dev ou pelo build. |
+| `npm.cmd run build` | Build padrão com Turbopack. |
+| `npm.cmd run build -- --webpack` | Alternativa validada na homologação. |
+| `npm.cmd run start` | Servir o build localmente. O login em modo de produção depende da identificação do ambiente Vercel e do IP da requisição. Use o servidor de desenvolvimento para testar o login local. |
+| `npm.cmd ls --all --silent` | Verificar a árvore instalada. |
+| `npm.cmd audit --json` e `npm.cmd audit --omit=dev --json` | Consultar os alertas da árvore completa e da árvore de produção. |
 
-**District Task — Organização individual de tarefas.**
+No Windows da homologação, o Turbopack apresentou falha ao conectar ao subprocesso Node do PostCSS. O build Webpack passou com a mesma aplicação e configuração.
+
+## Segurança e calendário
+
+- **Navegação** — Layout e página do dashboard verificam a sessão no servidor e redirecionam visitantes para `/login`.
+- **Operações** — Cada Server Action de tarefas exige sessão. O servidor deriva dela a propriedade dos registros. Listagem, edição e exclusão são restritas ao proprietário.
+- **Cadastro e login** — O cadastro normaliza o e-mail, limita a senha a 8 caracteres no mínimo e 72 bytes no máximo e grava hash bcrypt com custo 12. Upstash Redis limita o login por e-mail e IP. Os campos de credenciais ficam desabilitados e sem nome até a hidratação.
+- **Validação** — Interface e servidor validam os dados separadamente. As Server Actions rejeitam datas inexistentes, como `2026-02-30` e `1900-02-29`, e aceitam datas reais, como `2000-02-29` e `2028-02-29`. A rejeição de um prazo inválido preserva o registro inteiro.
+- **Representação do prazo** — `AAAA-MM-DD` é armazenado à meia-noite UTC. `null` e `""` removem o prazo na edição. Omitir o campo preserva o valor atual. Timestamps ISO válidos preservam o instante na conversão para UTC.
+
+## Homologação e publicação
+
+Para testar localmente, cadastre duas contas de demonstração. Crie tarefas com prazos e prioridades diferentes na primeira, edite, conclua, reabra e exclua uma tarefa, alterne os temas e recarregue a página. Use a segunda conta para conferir o isolamento. O roteiro completo e a matriz de Web II acompanham o relatório de entrega.
+
+A publicação depende da avaliação e resolução dos alertas de produção e da rotação dos valores de desenvolvimento previamente compartilhados. A auditoria registra um alerta crítico agregado em `next-auth@4.24.13` e avisos transitivos para `preact`, `source-map-js` e `uuid`.
+
+Após essa liberação, na Vercel use o preset Next.js, Node.js 24.x, instalação com `npm ci` e teste `npm run build`. Se o subprocesso PostCSS falhar, configure `npm run build -- --webpack`. Prepare MongoDB Atlas, Upstash Redis e segredos próprios de produção. Configure `NEXTAUTH_URL` no domínio real e valide login, rate limiting, CRUD, persistência e isolamento antes da liberação pública.
+
+## Créditos
+
+- Emilly — backend e documentação técnica.
+- Equipe de frontend — interface, integração e homologação.

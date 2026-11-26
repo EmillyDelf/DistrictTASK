@@ -1,5 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "@/components/feedback/toaster";
+import { ThemeProvider } from "@/components/theme/theme-provider";
 import "./globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
@@ -10,13 +12,21 @@ export const metadata: Metadata = {
   description: "Organize suas tarefas em um espaço simples e individual.",
 };
 
+export const viewport: Viewport = {
+  viewportFit: "cover",
+  interactiveWidget: "resizes-content",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="pt-BR">
+    <html lang="pt-BR" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
-        {children}
+        <ThemeProvider>
+          {children}
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );
