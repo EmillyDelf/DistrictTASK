@@ -6,14 +6,15 @@ A página inicial apresenta uma demonstração com dados fictícios.
 
 ## Funcionalidades
 
-- Cadastro, login e logout com e-mail e senha.
-- Criação, listagem, edição, conclusão, reabertura e exclusão de tarefas.
-- Pesquisa por título, filtros por status e prioridade e ordenação.
-- Definição de prazos, descrições e prioridades.
-- Indicadores de tarefas e acompanhamento das atividades.
-- Temas claro e escuro.
-- Interface responsiva para desktop e dispositivos móveis.
-- Estados de carregamento, lista vazia, erros e ausência de resultados.
+- **Autenticação e Conta:** Cadastro, login e logout seguros com e-mail e senha.
+- **Gestão Completa de Tarefas (CRUD):** Criação, listagem, edição, conclusão, reabertura e exclusão de atividades.
+- **Organização Avançada:** Pesquisa em tempo real por título, filtros combinados por status e prioridade, além de ordenação dinâmica.
+- **Detalhamento:** Definição de prazos, descrições detalhadas e níveis de prioridade.
+- **Métricas e Acompanhamento:** Indicadores visuais do progresso e resumo das tarefas.
+- **Experiência do Usuário (UX):**
+  - Alternância fluida entre temas claro e escuro.
+  - Interface responsiva adaptada para desktop e dispositivos móveis.
+  - Tratamento dedicado para estados de carregamento (*skeletons*), lista vazia, erros de servidor (`error.tsx`) e página 404 temática personalizada (`not-found.tsx`).
 
 ## Tecnologias
 
