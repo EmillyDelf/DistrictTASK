@@ -4,6 +4,11 @@ import "server-only";
 import { Redis } from "@upstash/redis";
 import { createHmac } from "node:crypto";
 
+// Limite de registro de usuários: 5 registros por IP a cada 15 minutos.
+const REGISTER_PREFIX = "district-task:register";
+const REGISTER_LIMIT = 5;
+const REGISTER_WINDOW_MS = 15 * 60 * 1000;
+
 const redis = Redis.fromEnv();
 
 const WINDOW_MS = 15 * 60 * 1000;

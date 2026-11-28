@@ -44,9 +44,9 @@ export async function registerUser(formData: FormData): Promise<RegisterResult> 
 
   try {
     await dbConnect();
-
+//alterei para que os usuarios não possam se cadastrar com o mesmo email e nem saber se já existe uma conta com aquele email.
     const existingUser = await User.exists({ email });
-    if (existingUser) return { error: "Este e-mail já está cadastrado." };
+    if (existingUser) return { error: "Não foi possível concluir o cadastro com os dados informados." };
 
     const hashedPassword = await bcrypt.hash(password, 12);
     await User.create({ name, email, password: hashedPassword });

@@ -4,6 +4,8 @@ export interface UserDocument extends mongoose.Document {
   name: string;
   email: string;
   password: string;
+  emailVerifiedAt: Date | null;
+  passwordChangedAt: Date | null;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,6 +30,14 @@ const UserSchema = new Schema<UserDocument>(
       type: String,
       required: true,
       select: false,
+    },
+    emailVerifiedAt: {
+      type: Date,
+      default: null,
+    },
+    passwordChangedAt: {
+      type: Date,
+      default: null,
     },
   },
   { timestamps: true },
