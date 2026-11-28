@@ -69,19 +69,42 @@ Após uma autenticação bem-sucedida, as falhas associadas ao e-mail são remov
 ## Estrutura do projeto
 
 ```text
-public/brand/        Identidade visual e logotipos
+public/
+├── brand/                    Identidade visual e logotipos (logo-dark.png, logo-light.png)
+└── not-found-cat.jpg         Imagem temática da página de erro 404
 src/
 ├── app/
-│   ├── (public)/    Páginas públicas e autenticação
-│   ├── dashboard/   Área privada
-│   ├── actions/     Server Actions de tarefas
-│   └── api/auth/    Integração NextAuth
-├── components/      Componentes da interface
-├── lib/             Banco, autenticação e rate limiting
-├── models/          Modelos Mongoose
-├── store/           Estado global com Zustand
-└── types/           Tipos e contratos TypeScript
-docs/                Documentação técnica e contratos
+│   ├── (public)/             Páginas públicas e autenticação
+│   ├── dashboard/            Área privada
+│   ├── actions/              Server Actions de tarefas e conta
+│   ├── api/auth/             Integração NextAuth
+│   ├── error.tsx             Tratamento global de erros
+│   ├── favicon.ico           Ícone do navegador
+│   └── not-found.tsx         Página personalizada de erro 404
+├── components/               Componentes da interface
+├── lib/
+│   ├── security/             Utilitários de segurança e criptografia
+│   ├── auth.ts               Configuração do NextAuth
+│   ├── dashboard-session.ts  Validação de sessão do dashboard
+│   ├── date-utils.ts         Formatação e manipulação de datas
+│   ├── db.ts                 Conexão Singleton com MongoDB
+│   ├── rate-limit.ts         Proteção de tentativas com Upstash Redis
+│   ├── task-utils.ts         Funções auxiliares de tarefas
+│   ├── task-validation.ts    Regras de validação de tarefas
+│   └── utils.ts              Utilitários gerais da interface
+├── models/
+│   ├── EmailVerificationToken.ts  Modelo de token para verificação de e-mail
+│   ├── PasswordResetToken.ts      Modelo de token para redefinição de senha
+│   ├── Task.ts                    Modelo Mongoose de tarefas
+│   └── User.ts                    Modelo Mongoose de usuários
+├── store/
+│   ├── task-ui-provider.tsx  Provedor de estado da interface
+│   └── task-ui-store.ts      Estado global com Zustand
+└── types/
+    ├── task.ts               Tipos e contratos de tarefas
+    └── types-next-auth.d.ts  Tipagens estendidas do NextAuth
+docs/                         Documentação técnica e contratos
+```[cite: 3, 4]
 ```
 
 ## Identidade visual
